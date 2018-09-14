@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 #include <optional>
-#include "include.hpp"
+#include "common.hpp"
 #include "result.hpp"
 
 class Instance {
@@ -58,9 +58,9 @@ class Instance {
         Result<Instance, VkResult> build();
     };
 
-    static std::vector<std::string> enumerate_extensions();
+    static Result<std::vector<std::string>, VkResult> enumerate_extensions();
 
-    static std::vector<std::string> enumerate_layers();
+    static Result<std::vector<std::string>, VkResult> enumerate_layers();
 
     void destroy();
 

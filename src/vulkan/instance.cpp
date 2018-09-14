@@ -60,53 +60,53 @@ void load_instance_level_functions(VkInstance instance) {
 }
 
 
-std::vector<std::string> Instance::enumerate_layers() {
+Result<std::vector<std::string>, VkResult> Instance::enumerate_layers() {
     load_global_functions();
 
     uint32_t count = 0;
     {
         VkResult result = vkEnumerateInstanceLayerProperties(&count, nullptr);
-        if (result < 0) {
-            std::cerr << "Unable to enumerate instance layers" << std::endl;
+        if (VkResult_is_err(result)) {
+            return Result<std::vector<std::string>, VkResult>(result);
         }
     }
     std::vector<VkLayerProperties> layers(count);
     {
         VkResult result = vkEnumerateInstanceLayerProperties(&count, &layers[0]);
-        if (result < 0) {
-            std::cerr << "Unable to enumerate instance layers" << std::endl;
+        if (VkResult_is_err(result)) {
+            return Result<std::vector<std::string>, VkResult>(result);
         }
     }
     std::vector<std::string> result(count);
     for (size_t i = 0; i < count; ++i) {
         result[i] = std::string(layers[i].layerName);
     }
-    return result;
+    return Result<std::vector<std::string>, VkResult>(result);
 }
 
 
-std::vector<std::string> Instance::enumerate_extensions() {
+Result<std::vector<std::string>, VkResult> Instance::enumerate_extensions() {
     load_global_functions();
 
     uint32_t count = 0;
     {
         VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
-        if (result < 0) {
-            std::cerr << "Unable to enumerate instance layers" << std::endl;
+        if (VkResult_is_err(result)) {
+            return Result<std::vector<std::string>, VkResult>(result);
         }
     }
     std::vector<VkExtensionProperties> layers(count);
     {
         VkResult result = vkEnumerateInstanceExtensionProperties(nullptr, &count, &layers[0]);
-        if (result < 0) {
-            std::cerr << "Unable to enumerate instance layers" << std::endl;
+        if (VkResult_is_err(result)) {
+            return Result<std::vector<std::string>, VkResult>(result);
         }
     }
     std::vector<std::string> result(count);
     for (size_t i = 0; i < count; ++i) {
         result[i] = std::string(layers[i].extensionName);
     }
-    return result;
+    return Result<std::vector<std::string>, VkResult>(result);
 }
 
 Instance::Instance(VkInstance instance) : raw_instance(instance) {}
@@ -183,7 +183,7 @@ Result<Instance, VkResult> Instance::Builder::build() {
     VkInstance raw_instance;
     VkResult result = vkCreateInstance(&create_info, nullptr, &raw_instance);
 
-    if (result < 0) {
+    if (VkResult_is_err(result)) {
         return Result<Instance, VkResult>(result);
     }
 
