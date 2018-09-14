@@ -115,13 +115,13 @@ Instance::Builder::Builder() {
 
 }
 
-Instance::Builder& Instance::Builder::add_extension(std::string extension) {
-    properties.enabled_extensions.push_back(extension.c_str());
+Instance::Builder& Instance::Builder::add_extension(const std::string& name) {
+    properties.enabled_extensions.push_back(&name[0]);
     return *this;
 }
 
-Instance::Builder& Instance::Builder::add_layer(std::string layer) {
-    properties.enabled_layers.push_back(layer.c_str());
+Instance::Builder& Instance::Builder::add_layer(const std::string& name) {
+    properties.enabled_layers.push_back(&name[0]);
     return *this;
 }
 
@@ -167,9 +167,18 @@ Result<Instance, VkResult> Instance::Builder::build() {
     create_info.pNext = nullptr;
     create_info.pApplicationInfo = &app_info;
     create_info.enabledExtensionCount = properties.enabled_extensions.size();
-    create_info.ppEnabledExtensionNames = (properties.enabled_extensions.size() > 0) ? properties.enabled_extensions.data() : nullptr;
+    create_info.ppEnabledExtensionNames = (properties.enabled_extensions.size() > 0) ? &properties.enabled_extensions[0] : nullptr;
     create_info.enabledLayerCount = properties.enabled_layers.size();
-    create_info.ppEnabledLayerNames = (properties.enabled_layers.size() > 0) ? properties.enabled_layers.data() : nullptr;
+    create_info.ppEnabledLayerNames = (properties.enabled_layers.size() > 0) ? &properties.enabled_layers[0] : nullptr;
+
+    std::cout << "Creating instance with " << properties.enabled_extensions.size() << " extensions" << std::endl;
+    for (auto &ext : properties.enabled_extensions) {
+        std::cout << ext << std::endl;
+    }
+    std::cout << "Creating instance with " << properties.enabled_layers.size() << " layers" << std::endl;
+    for (auto &ext : properties.enabled_layers) {
+        std::cout << ext << std::endl;
+    }
 
     VkInstance raw_instance;
     VkResult result = vkCreateInstance(&create_info, nullptr, &raw_instance);

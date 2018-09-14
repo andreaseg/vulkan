@@ -8,6 +8,10 @@ int main() {
 
     
     auto instance = Instance::Builder()
+        .add_layer(Instance::Layer::StandardValidation)
+        .add_layer(Instance::Layer::RenderDocCapture)
+        .add_extension(Instance::Extension::Surface)
+        .add_extension(Instance::Extension::Win32Surface)
         .build()
         .unwrap();
 

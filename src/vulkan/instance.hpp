@@ -48,8 +48,8 @@ class Instance {
         Properties properties;
         public:
         Builder();
-        Builder& add_extension(std::string extension);
-        Builder& add_layer(std::string layer);
+        Builder& add_extension(const std::string& extension);
+        Builder& add_layer(const std::string& layer);
         Builder& app_name(std::string name);
         Builder& app_version(uint32_t major, uint32_t minor, uint32_t patch);
         Builder& engine_name(std::string name);
