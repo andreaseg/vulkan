@@ -5,21 +5,11 @@
 #endif
 
 int main() {
-    auto layers = Instance::enumerate_layers();
-    for (auto &layer: layers) {
-        std::cout << layer << std::endl;
-    }
-    auto extensions = Instance::enumerate_extensions();
-    for (auto &extension: extensions) {
-        std::cout << extension << std::endl;
-    }
 
     
-    Instance instance = Instance::Builder()
-        .add_extension(Instance::Extension::DegbgReport)
-        .add_layer(Instance::Layer::StandardValidation)
-        .add_layer(Instance::Layer::RenderDocCapture)
-        .build();
+    auto instance = Instance::Builder()
+        .build()
+        .unwrap();
 
     instance.destroy();
     

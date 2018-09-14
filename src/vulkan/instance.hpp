@@ -5,6 +5,7 @@
 #include <vector>
 #include <optional>
 #include "include.hpp"
+#include "result.hpp"
 
 class Instance {
     public:
@@ -16,7 +17,7 @@ class Instance {
         };
 
         struct Extension {
-            const static std::string DegbgReport;
+            const static std::string DebugReport;
             const static std::string DebugUtils;
             const static std::string Surface;
             const static std::string Win32Surface;
@@ -54,7 +55,7 @@ class Instance {
         Builder& engine_name(std::string name);
         Builder& engine_version(uint32_t major, uint32_t minor, uint32_t patch);
         Builder& api_version(uint32_t major, uint32_t minor, uint32_t patch);
-        Instance build();
+        Result<Instance, VkResult> build();
     };
 
     static std::vector<std::string> enumerate_extensions();

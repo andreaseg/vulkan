@@ -4,7 +4,7 @@
 const std::string Instance::Layer::RenderDocCapture = "VK_LAYER_RENDERDOC_Capture";
 const std::string Instance::Layer::StandardValidation = "VK_LAYER_LUNARG_standard_validation";
 
-const std::string Instance::Extension::DegbgReport = "VK_EXT_debug_report";
+const std::string Instance::Extension::DebugReport = "VK_EXT_debug_report";
 const std::string Instance::Extension::DebugUtils = "VK_EXT_debug_utils";
 const std::string Instance::Extension::Surface = "VK_KHR_surface";
 const std::string Instance::Extension::Win32Surface = "VK_KHR_win32_surface";
@@ -25,28 +25,38 @@ void load_global_functions() {
     if (VULKAN_LIBRARY != nullptr) return;
 
     #ifdef WINDOWS
-    VULKAN_LIBRARY = LoadLibrary("vulkan-1.dll");
+    VULKAN_LIBRARY = LoadLibraryA("vulkan-1.dll");
     #else
     VULKAN_LIBRARY = dlopen("libvulkan.so.1", RTLD_NOW);
     #endif
     if (VULKAN_LIBRARY == nullptr) {
         std::cerr << "Unable to load vulkan library" << std::endl;
-        std::abort();
     }
 
     vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr) LoadFunction(VULKAN_LIBRARY, "vkGetInstanceProcAddr");
     if (vkGetInstanceProcAddr == nullptr) {
         std::cerr << "Unable to load vulkan library" << std::endl;
-        std::abort();
     }
+
     LOAD_GLOBAL_FUNCTION(vkEnumerateInstanceExtensionProperties)
     LOAD_GLOBAL_FUNCTION(vkEnumerateInstanceLayerProperties)
     LOAD_GLOBAL_FUNCTION(vkCreateInstance)
-    LOAD_GLOBAL_FUNCTION(vkDestroyInstance)
+
+    std::cout << "Loaded global vulkan functions" << std::endl;
+    
 }
 
-void load_instance_level_functions() {
+#define LOAD_INSTANCE_FUNCTION(name) \
+name = (PFN_##name) vkGetInstanceProcAddr(instance, #name);\
+if (name == nullptr) {\
+    std::cerr << "Unable to load instance level function: " #name << std::endl;\
+}
 
+
+void load_instance_level_functions(VkInstance instance) {
+    LOAD_INSTANCE_FUNCTION(vkDestroyInstance)
+
+    std::cout << "Loaded instance level vulkan functions" << std::endl;
 }
 
 
@@ -140,12 +150,13 @@ Instance::Builder& Instance::Builder::api_version(uint32_t major, uint32_t minor
     return *this;
 }
 
-Instance Instance::Builder::build() {
+Result<Instance, VkResult> Instance::Builder::build() {
     load_global_functions();
 
     VkApplicationInfo app_info;
     app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-    app_info.apiVersion = properties.api_version.value_or(VK_MAKE_VERSION(1, 0, 0));
+    app_info.pNext = nullptr;
+    app_info.apiVersion = properties.api_version.value_or(VK_MAKE_VERSION(1, 1, 0));
     app_info.applicationVersion = properties.app_version.value_or(VK_MAKE_VERSION(0, 1, 0));
     app_info.engineVersion = properties.engine_version.value_or(VK_MAKE_VERSION(0, 1, 0));
     app_info.pApplicationName = properties.app_name.value_or("Vulkan application").c_str();
@@ -153,24 +164,29 @@ Instance Instance::Builder::build() {
 
     VkInstanceCreateInfo create_info;
     create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+    create_info.pNext = nullptr;
     create_info.pApplicationInfo = &app_info;
     create_info.enabledExtensionCount = properties.enabled_extensions.size();
-    create_info.ppEnabledExtensionNames = &properties.enabled_extensions[0];
+    create_info.ppEnabledExtensionNames = (properties.enabled_extensions.size() > 0) ? properties.enabled_extensions.data() : nullptr;
     create_info.enabledLayerCount = properties.enabled_layers.size();
-    create_info.ppEnabledLayerNames = &properties.enabled_layers[0];
+    create_info.ppEnabledLayerNames = (properties.enabled_layers.size() > 0) ? properties.enabled_layers.data() : nullptr;
 
     VkInstance raw_instance;
     VkResult result = vkCreateInstance(&create_info, nullptr, &raw_instance);
+
     if (result < 0) {
-        std::cerr << "Unable to create instance" << std::endl;
+        return Result<Instance, VkResult>(result);
     }
 
-    return Instance(raw_instance);
+    load_instance_level_functions(raw_instance);
+
+    return Result<Instance, VkResult>(Instance(raw_instance));
 }
 
 void Instance::destroy() {
     vkDestroyInstance(raw_instance, nullptr);
-    
+    raw_instance = nullptr;
+
     #ifdef WINDOWS
     FreeLibrary(VULKAN_LIBRARY);
     #else
