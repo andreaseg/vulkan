@@ -1,11 +1,14 @@
 NAME= main
 WARN= -Wall -Wextra
 CPPVER= -std=c++17
-SRCS= $(wildcard src/*.cpp)
 CC=clang
 CXX=clang
 DIR=target
 DEBUG?=1
+
+rwildcard = $(wildcard $1$2) $(foreach d,$(wildcard $1*),$(call rwildcard,$d/,$2))
+SRCS = $(wildcard src/*.cpp)
+SRCS += $(call rwildcard,src/vulkan,*.cpp)
 
 ifeq ($(shell echo $(VULKAN_SDK)),)
 $(error Vulkan directory not set. Add directory as VULKAN_SDK to enviroment)
@@ -57,11 +60,10 @@ $(TARGET): $(OBJS)
 
 $(DIR)/%.o : src/%.cpp
 	@echo "Compiling $<"
+	@mkdir -p $(@D)
 	@$(CXX) $(INC) $(CPPFLAGS) -c $< -o $@
 
 # Shader compilation
-
-$(shell mkdir -p $(DIR)/shaders)
 
 SHDSRCS = $(wildcard src/shaders/*)
 SHDTAR = $(patsubst src/shaders/%,$(DIR)/shaders/%.spv,$(SHDSRCS))
@@ -76,6 +78,7 @@ shaders: $(SHDTAR)
 
 $(DIR)/shaders/%.spv: src/shaders/%
 	@echo "Compiling shader $@"
+	@mkdir -p $(@D)
 	@$(VAL) -V $< -o $@
 
 clean-shaders: $(SHDTAR)
