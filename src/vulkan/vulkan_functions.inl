@@ -25,6 +25,8 @@ VK_INSTANCE_FUNCTION(vkEnumeratePhysicalDevices)
 VK_INSTANCE_FUNCTION(vkGetPhysicalDeviceProperties)
 VK_INSTANCE_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties)
 VK_INSTANCE_FUNCTION(vkCreateDevice)
+VK_INSTANCE_FUNCTION(vkEnumerateDeviceExtensionProperties)
+VK_INSTANCE_FUNCTION(vkGetDeviceProcAddr)
 
 #undef VK_INSTANCE_FUNCTION
 

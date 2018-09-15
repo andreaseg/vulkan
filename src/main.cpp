@@ -1,6 +1,7 @@
 #include <iostream>
 #include "vulkan/instance.hpp"
 #include "vulkan/physical_device.hpp"
+#include "vulkan/device.hpp"
 #ifdef WINDOWS
 #include <windows.h>
 #endif
@@ -20,6 +21,15 @@ int main() {
 
     auto [general_queue_family, transfer_queue_family] = QueueFamily::Builder(physical_device).build();
 
+    auto exts = Device::Extension::enumerate(physical_device).unwrap();
+
+    auto device = Device::Builder(physical_device)
+        .add_queue(general_queue_family, {1})
+        .add_queue(transfer_queue_family, {1})
+        .build()
+        .expect("Unable to create device");
+
+    device.destroy();
     instance.destroy();
     
     std::cout << "ok" << std::endl;

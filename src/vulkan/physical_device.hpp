@@ -1,9 +1,9 @@
 #ifndef PHYSICAL_DEVICE_HPP
 #define PHYSICAL_DEVICE_HPP
 
-#include "instance.hpp"
+#include "include.hpp"
+#include "result.hpp"
 #include <tuple>
-
 
 class PhysicalDevice {
     private:
@@ -16,7 +16,7 @@ class PhysicalDevice {
         private:
         BuilderProperties builder_properties;
         public:
-        Builder(Instance instance);
+        Builder(VkInstance instance);
 
         Result<PhysicalDevice, VkResult> build();
     };
@@ -37,10 +37,12 @@ class QueueFamily {
     protected:
     uint32_t index;
     uint32_t count;
+    uint32_t flags;
     public:
     QueueFamily(uint32_t index, uint32_t count);
     uint32_t get_index();
     uint32_t get_count();
+    uint32_t get_flags();
 
     class Builder {
         private:
@@ -54,12 +56,12 @@ class QueueFamily {
 
 // Supports transfer
 struct TransferQueueFamily: public QueueFamily {
-    using QueueFamily::QueueFamily;
+    TransferQueueFamily(uint32_t index, uint32_t count);
 };
 
 // Supports compute + graphics
 struct GeneralQueueFamily: public QueueFamily {
-    using QueueFamily::QueueFamily;
+    GeneralQueueFamily(uint32_t index, uint32_t count);
 };
 
 

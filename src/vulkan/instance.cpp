@@ -57,7 +57,7 @@ void load_instance_level_functions(VkInstance instance) {
 }
 
 
-Result<std::vector<std::string>, VkResult> Instance::enumerate_layers() {
+Result<std::vector<std::string>, VkResult> Instance::Layer::enumerate() {
     load_global_functions();
 
     uint32_t count = 0;
@@ -82,7 +82,7 @@ Result<std::vector<std::string>, VkResult> Instance::enumerate_layers() {
 }
 
 
-Result<std::vector<std::string>, VkResult> Instance::enumerate_extensions() {
+Result<std::vector<std::string>, VkResult> Instance::Extension::enumerate() {
     load_global_functions();
 
     uint32_t count = 0;

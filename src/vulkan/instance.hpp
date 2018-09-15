@@ -7,23 +7,28 @@
 #include "include.hpp"
 #include "result.hpp"
 
+
 class Instance {
     public:
-        struct Layer {
-            const static std::string RenderDocCapture;
-            const static std::string StandardValidation;
+    struct Layer {
+        const static std::string RenderDocCapture;
+        const static std::string StandardValidation;
 
-            ~Layer() = delete;
-        };
+        static Result<std::vector<std::string>, VkResult> enumerate();
 
-        struct Extension {
-            const static std::string DebugReport;
-            const static std::string DebugUtils;
-            const static std::string Surface;
-            const static std::string Win32Surface;
+        ~Layer() = delete;
+    };
 
-            ~Extension() = delete;
-        };
+    struct Extension {
+        const static std::string DebugReport;
+        const static std::string DebugUtils;
+        const static std::string Surface;
+        const static std::string Win32Surface;
+
+        static Result<std::vector<std::string>, VkResult> enumerate();
+
+        ~Extension() = delete;
+    };
 
     private:
 
@@ -44,10 +49,6 @@ class Instance {
     public:
 
     operator VkInstance() {return raw_instance;}
-
-    static Result<std::vector<std::string>, VkResult> enumerate_extensions();
-
-    static Result<std::vector<std::string>, VkResult> enumerate_layers();
 
     class Builder {
         private:
