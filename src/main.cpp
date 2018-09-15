@@ -1,5 +1,6 @@
 #include <iostream>
 #include "vulkan/instance.hpp"
+#include "vulkan/physical_device.hpp"
 #ifdef WINDOWS
 #include <windows.h>
 #endif
@@ -9,21 +10,19 @@ int main() {
     
     auto instance = Instance::Builder()
         .add_layer(Instance::Layer::StandardValidation)
-        .add_layer(Instance::Layer::RenderDocCapture)
+        //.add_layer(Instance::Layer::RenderDocCapture)
         .add_extension(Instance::Extension::Surface)
         .add_extension(Instance::Extension::Win32Surface)
         .build()
         .expect("Unable to create instance");
 
-    auto physical_device = instance.pick_physical_device().expect("Unable to pick physical device");
-    auto [general_queue_family, transfer_queue_family] = physical_device.pick_queue_families();
+    auto physical_device = PhysicalDevice::Builder(instance).build().expect("Unable to pick physical device");
 
-    std::cout << general_queue_family.get_index() << general_queue_family.get_count() << std::endl;
-    std::cout << transfer_queue_family.get_index() << transfer_queue_family.get_count() << std::endl;
+    auto [general_queue_family, transfer_queue_family] = QueueFamily::Builder(physical_device).build();
 
     instance.destroy();
     
-
+    std::cout << "ok" << std::endl;
     return 0;
 }
 

@@ -13,7 +13,6 @@ VK_ENTRY_FUNCTION(vkGetInstanceProcAddr)
 VK_GLOBAL_FUNCTION(vkEnumerateInstanceExtensionProperties)
 VK_GLOBAL_FUNCTION(vkEnumerateInstanceLayerProperties)
 VK_GLOBAL_FUNCTION(vkCreateInstance)
-VK_GLOBAL_FUNCTION(vkDestroyInstance)
 
 #undef VK_GLOBAL_FUNCTION
 
@@ -21,6 +20,7 @@ VK_GLOBAL_FUNCTION(vkDestroyInstance)
 #define VK_INSTANCE_FUNCTION(name)
 #endif
 
+VK_INSTANCE_FUNCTION(vkDestroyInstance)
 VK_INSTANCE_FUNCTION(vkEnumeratePhysicalDevices)
 VK_INSTANCE_FUNCTION(vkGetPhysicalDeviceProperties)
 VK_INSTANCE_FUNCTION(vkGetPhysicalDeviceQueueFamilyProperties)

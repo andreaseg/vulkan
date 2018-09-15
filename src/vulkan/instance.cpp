@@ -1,5 +1,6 @@
 #include "instance.hpp"
 #include "vulkan_functions.hpp"
+#include "common.hpp"
 #include <iostream>
 
 const std::string Instance::Layer::RenderDocCapture = "VK_LAYER_RENDERDOC_Capture";
@@ -42,7 +43,6 @@ void load_global_functions() {
 
     #include "vulkan_functions.inl"
 
-    std::cout << "Loaded global vulkan functions" << std::endl;
     
 }
 
@@ -54,7 +54,6 @@ if (name == nullptr) {\
 
 void load_instance_level_functions(VkInstance instance) {
     #include "vulkan_functions.inl"
-    std::cout << "Loaded instance level vulkan functions" << std::endl;
 }
 
 
@@ -169,15 +168,6 @@ Result<Instance, VkResult> Instance::Builder::build() {
     create_info.enabledLayerCount = properties.enabled_layers.size();
     create_info.ppEnabledLayerNames = (properties.enabled_layers.size() > 0) ? &properties.enabled_layers[0] : nullptr;
 
-    std::cout << "Creating instance with " << properties.enabled_extensions.size() << " extensions" << std::endl;
-    for (auto &ext : properties.enabled_extensions) {
-        std::cout << ext << std::endl;
-    }
-    std::cout << "Creating instance with " << properties.enabled_layers.size() << " layers" << std::endl;
-    for (auto &ext : properties.enabled_layers) {
-        std::cout << ext << std::endl;
-    }
-
     VkInstance raw_instance;
     VkResult result = vkCreateInstance(&create_info, nullptr, &raw_instance);
 
@@ -202,21 +192,3 @@ void Instance::destroy() {
     VULKAN_LIBRARY = nullptr;
 }
 
-Result<PhysicalDevice, VkResult> Instance::pick_physical_device() {
-    uint32_t count = 0;
-    {
-        VkResult result = vkEnumeratePhysicalDevices(raw_instance, &count, nullptr);
-        if (VkResult_is_err(result)) {
-            return Result<PhysicalDevice, VkResult>(result);
-        }
-    }
-    std::vector<VkPhysicalDevice> raw_physical_devices(count);
-    {
-        VkResult result = vkEnumeratePhysicalDevices(raw_instance, &count, &raw_physical_devices[0]);
-        if (VkResult_is_err(result)) {
-            return Result<PhysicalDevice, VkResult>(result);
-        }
-    }
-
-    return Result<PhysicalDevice, VkResult>(PhysicalDevice(raw_physical_devices[0]));
-}

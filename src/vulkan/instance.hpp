@@ -4,10 +4,8 @@
 #include <string>
 #include <vector>
 #include <optional>
-#include "common.hpp"
+#include "include.hpp"
 #include "result.hpp"
-
-#include "physical_device.hpp"
 
 class Instance {
     public:
@@ -45,6 +43,8 @@ class Instance {
 
     public:
 
+    operator VkInstance() {return raw_instance;}
+
     static Result<std::vector<std::string>, VkResult> enumerate_extensions();
 
     static Result<std::vector<std::string>, VkResult> enumerate_layers();
@@ -63,8 +63,6 @@ class Instance {
         Builder& api_version(uint32_t major, uint32_t minor, uint32_t patch);
         Result<Instance, VkResult> build();
     };
-
-    Result<PhysicalDevice, VkResult> pick_physical_device();
 
     void destroy();
 

@@ -3,6 +3,13 @@
 
 #include "include.hpp"
 
+#ifdef WINDOWS
+#include <windows.h>
+static HMODULE VULKAN_LIBRARY = nullptr;
+#else
+static void* VULKAN_LIBRARY = nullptr;
+#endif
+
 #define VK_ENTRY_FUNCTION(name)\
 extern PFN_##name name;
 
