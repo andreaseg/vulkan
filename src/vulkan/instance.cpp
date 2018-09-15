@@ -1,4 +1,5 @@
 #include "instance.hpp"
+#include "vulkan_functions.hpp"
 #include <iostream>
 
 const std::string Instance::Layer::RenderDocCapture = "VK_LAYER_RENDERDOC_Capture";
@@ -15,7 +16,13 @@ const std::string Instance::Extension::Win32Surface = "VK_KHR_win32_surface";
 #define LoadFunction dlsym
 #endif
 
-#define LOAD_GLOBAL_FUNCTION(name) \
+#define VK_ENTRY_FUNCTION(name)\
+name = (PFN_##name) LoadFunction(VULKAN_LIBRARY, #name);\
+if (name == nullptr) {\
+    std::cerr << "Unable to load entry function: " #name << std::endl;\
+}
+
+#define VK_GLOBAL_FUNCTION(name) \
 name = (PFN_##name) vkGetInstanceProcAddr(nullptr, #name);\
 if (name == nullptr) {\
     std::cerr << "Unable to load global function: " #name << std::endl;\
@@ -33,29 +40,20 @@ void load_global_functions() {
         std::cerr << "Unable to load vulkan library" << std::endl;
     }
 
-    vkGetInstanceProcAddr = (PFN_vkGetInstanceProcAddr) LoadFunction(VULKAN_LIBRARY, "vkGetInstanceProcAddr");
-    if (vkGetInstanceProcAddr == nullptr) {
-        std::cerr << "Unable to load vulkan library" << std::endl;
-    }
-
-    LOAD_GLOBAL_FUNCTION(vkEnumerateInstanceExtensionProperties)
-    LOAD_GLOBAL_FUNCTION(vkEnumerateInstanceLayerProperties)
-    LOAD_GLOBAL_FUNCTION(vkCreateInstance)
+    #include "vulkan_functions.inl"
 
     std::cout << "Loaded global vulkan functions" << std::endl;
     
 }
 
-#define LOAD_INSTANCE_FUNCTION(name) \
+#define VK_INSTANCE_FUNCTION(name) \
 name = (PFN_##name) vkGetInstanceProcAddr(instance, #name);\
 if (name == nullptr) {\
     std::cerr << "Unable to load instance level function: " #name << std::endl;\
 }
 
-
 void load_instance_level_functions(VkInstance instance) {
-    LOAD_INSTANCE_FUNCTION(vkDestroyInstance)
-
+    #include "vulkan_functions.inl"
     std::cout << "Loaded instance level vulkan functions" << std::endl;
 }
 
@@ -202,4 +200,23 @@ void Instance::destroy() {
     dlclose(VULKAN_LIBRARY);
     #endif
     VULKAN_LIBRARY = nullptr;
+}
+
+Result<PhysicalDevice, VkResult> Instance::pick_physical_device() {
+    uint32_t count = 0;
+    {
+        VkResult result = vkEnumeratePhysicalDevices(raw_instance, &count, nullptr);
+        if (VkResult_is_err(result)) {
+            return Result<PhysicalDevice, VkResult>(result);
+        }
+    }
+    std::vector<VkPhysicalDevice> raw_physical_devices(count);
+    {
+        VkResult result = vkEnumeratePhysicalDevices(raw_instance, &count, &raw_physical_devices[0]);
+        if (VkResult_is_err(result)) {
+            return Result<PhysicalDevice, VkResult>(result);
+        }
+    }
+
+    return Result<PhysicalDevice, VkResult>(PhysicalDevice(raw_physical_devices[0]));
 }

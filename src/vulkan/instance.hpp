@@ -7,6 +7,8 @@
 #include "common.hpp"
 #include "result.hpp"
 
+#include "physical_device.hpp"
+
 class Instance {
     public:
         struct Layer {
@@ -43,6 +45,10 @@ class Instance {
 
     public:
 
+    static Result<std::vector<std::string>, VkResult> enumerate_extensions();
+
+    static Result<std::vector<std::string>, VkResult> enumerate_layers();
+
     class Builder {
         private:
         Properties properties;
@@ -58,9 +64,7 @@ class Instance {
         Result<Instance, VkResult> build();
     };
 
-    static Result<std::vector<std::string>, VkResult> enumerate_extensions();
-
-    static Result<std::vector<std::string>, VkResult> enumerate_layers();
+    Result<PhysicalDevice, VkResult> pick_physical_device();
 
     void destroy();
 

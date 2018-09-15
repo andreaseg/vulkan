@@ -1,7 +1,8 @@
 #ifndef RESULT_HPP
 #define RESULT_HPP
+#include <string>
+#include <iostream>
 #include <variant>
-#include <functional>
 
 template<typename R, typename E>
 class Result {
@@ -25,8 +26,15 @@ class Result {
         return std::get<R>(inner);
     }
 
+    inline R expect(std::string message) {
+        if (!is_ok()) {
+            std::cerr << message << std::endl;
+        }
+        return std::get<R>(inner);
+    }
+
     inline R unwrap_or(R fallback) {
-        return is_ok ? std::get<R>(inner) : fallback;
+        return is_ok() ? std::get<R>(inner) : fallback;
     }
 };
 

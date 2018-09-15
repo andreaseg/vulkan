@@ -13,7 +13,13 @@ int main() {
         .add_extension(Instance::Extension::Surface)
         .add_extension(Instance::Extension::Win32Surface)
         .build()
-        .unwrap();
+        .expect("Unable to create instance");
+
+    auto physical_device = instance.pick_physical_device().expect("Unable to pick physical device");
+    auto [general_queue_family, transfer_queue_family] = physical_device.pick_queue_families();
+
+    std::cout << general_queue_family.get_index() << general_queue_family.get_count() << std::endl;
+    std::cout << transfer_queue_family.get_index() << transfer_queue_family.get_count() << std::endl;
 
     instance.destroy();
     

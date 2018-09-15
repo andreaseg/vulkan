@@ -5,7 +5,7 @@
 #include <string>
 
 
-std::string VkResult_to_string(VkResult result) {
+static std::string VkResult_to_string(VkResult result) {
     switch (result) {
         case VK_SUCCESS: return "Success";
         case VK_NOT_READY: return "Not ready";
@@ -40,7 +40,7 @@ std::string VkResult_to_string(VkResult result) {
     }
 }
 
-bool VkResult_is_err(VkResult result) {
+static bool VkResult_is_err(VkResult result) {
     return result < 0;
 }
 
