@@ -20,9 +20,11 @@ int main() {
         .expect("Unable to create instance");
     
     auto debugger = Debugger::Builder(instance)
-        .severity_error()
-        .severity_warning()
+        //.severity_error()
+        //.severity_warning()
+        .severity_all()
         .type_all()
+        .write_to_file("vk_log.txt")
         .build()
         .expect("Unable to create debugger");
 
@@ -43,8 +45,8 @@ int main() {
     auto transfer_queue = device.get_queue(transfer_queue_family, 0);
     auto general_queue = device.get_queue(general_queue_family, 0);
 
-    instance.destroy(debugger);
     device.destroy();
+    instance.destroy(debugger);
     instance.destroy();
 
     

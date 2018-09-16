@@ -11,6 +11,7 @@ class Debugger {
         VkInstance raw_instance;
         uint32_t severity;
         uint32_t message_type;
+        std::string print_file_path;
     };
     public:
     class Builder {
@@ -26,6 +27,7 @@ class Debugger {
         Builder& type_performance();
         Builder& severity_all();
         Builder& type_all();
+        Builder& write_to_file(std::string path);
         Result<Debugger, VkResult> build();
     };
     operator VkDebugUtilsMessengerEXT() {return messenger;}
