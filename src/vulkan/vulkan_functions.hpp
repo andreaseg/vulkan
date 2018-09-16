@@ -22,6 +22,12 @@ extern PFN_##name name;
 #define VK_DEVICE_FUNCTION(name)\
 extern PFN_##name name;
 
+#define VK_INSTANCE_EXTENSION_FUNCTION(name, extension)\
+extern PFN_##name name;
+
+#define VK_EXTENSION_FUNCTION(name, extension)\
+extern PFN_##name name;
+
 #include "vulkan_functions.inl"
 
 #endif // VK_FUNCTIONS_HPP

@@ -9,7 +9,7 @@ const std::string Device::Extension::DedicatedAllocation  = "VK_KHR_dedicated_al
 const std::string Device::Extension::DescriptorUpdateTemplate = "VK_KHR_descriptor_update_template";
 const std::string Device::Extension::DeviceGroup  = "VK_KHR_device_group";
 const std::string Device::Extension::GotMemoryReuirements2  = "VK_KHR_get_memory_requirements2";
-const std::string Device::Extension::ImaegFormatList = "VK_KHR_image_format_list";
+const std::string Device::Extension::ImageFormatList = "VK_KHR_image_format_list";
 const std::string Device::Extension::Maintenance1 = "VK_KHR_maintenance1";
 const std::string Device::Extension::Maintenance2  = "VK_KHR_maintenance2";
 const std::string Device::Extension::Maintenance3  = "VK_KHR_maintenance3";
@@ -46,10 +46,20 @@ const std::string Device::Extension::NvidiaXMultiviewPerViewAttribures = "VK_NVX
 #define VK_DEVICE_FUNCTION(name) \
 name = (PFN_##name) vkGetDeviceProcAddr(device, #name);\
 if (name == nullptr) {\
-    std::cerr << "Unable to load instance level function: " #name << std::endl;\
+    std::cerr << "Unable to load device level function: " #name << std::endl;\
 }
 
-void load_device_level_functions(VkDevice device) {
+#define VK_EXTENSION_FUNCTION(name, extension) \
+for (auto& n: extension_names) {\
+    if (std::string(extension) == n) {\
+        name = (PFN_##name) vkGetDeviceProcAddr(device, #name);\
+        if (name == nullptr) {\
+            std::cerr << "Unable to load device level extension function: " #name " from " << std::string(extension) << std::endl;\
+        }\
+    }\
+}
+
+void load_device_level_functions(VkDevice device, std::vector<std::string> extension_names) {
     #include "vulkan_functions.inl"
 }
 
@@ -79,8 +89,14 @@ Device::Builder::Builder(VkPhysicalDevice physical_device) {
     builder_properties.physical_device = physical_device;
 }
 
-Device::Builder& Device::Builder::add_extension(const std::string& name) {
-    builder_properties.enabled_extensions.push_back(&name[0]);
+Device::Builder& Device::Builder::add_extension(const std::string& extension) {
+    builder_properties.enabled_extensions.push_back(&extension[0]);
+    builder_properties.load_extensions.push_back(extension);
+    return *this;
+}
+
+Device::Builder& Device::Builder::add_instance_extension(const std::string& extension) {
+    builder_properties.load_extensions.push_back(extension);
     return *this;
 }
 
@@ -100,9 +116,9 @@ Result<Device, VkResult> Device::Builder::build() {
     create_info.pNext = nullptr;
     create_info.flags = 0;
     create_info.enabledLayerCount = 0;
-    create_info.ppEnabledExtensionNames = nullptr;
+    create_info.ppEnabledLayerNames = nullptr;
 
-    create_info.enabledLayerCount = builder_properties.enabled_extensions.size();
+    create_info.enabledExtensionCount = builder_properties.enabled_extensions.size();
     create_info.ppEnabledExtensionNames 
         = (builder_properties.enabled_extensions.size() > 0) ? &builder_properties.enabled_extensions[0] : nullptr;
 
@@ -119,7 +135,7 @@ Result<Device, VkResult> Device::Builder::build() {
         queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queue_create_infos[i].pNext = nullptr;
         queue_create_infos[i].queueFamilyIndex = std::get<0>(builder_properties.queues[i]).get_index();
-        queue_create_infos[i].flags = std::get<0>(builder_properties.queues[i]).get_flags();
+        queue_create_infos[i].flags = 0;
         queue_create_infos[i].queueCount = min(std::get<1>(builder_properties.queues[i]).size(), builder_properties.queues.size());
         queue_create_infos[i].pQueuePriorities = &std::get<1>(builder_properties.queues[i])[0];
     }
@@ -132,7 +148,7 @@ Result<Device, VkResult> Device::Builder::build() {
         return Result<Device, VkResult>(result);
     }
 
-    load_device_level_functions(raw_device);
+    load_device_level_functions(raw_device, builder_properties.load_extensions);
 
     return Result<Device, VkResult>(Device(raw_device));
 }
@@ -141,4 +157,25 @@ Device::Device(VkDevice raw_device): raw_device(raw_device) {}
 
 void Device::destroy() {
     vkDestroyDevice(raw_device, nullptr);
+    raw_device = nullptr;
+}
+
+Queue::Queue(VkQueue raw_queue) : raw_queue(raw_queue) {}
+
+inline VkQueue get_raw_queue(VkDevice device, QueueFamily queue_family, uint32_t index) {
+    VkQueue raw_queue;
+    vkGetDeviceQueue(device, queue_family.get_index(), index, &raw_queue);
+    return raw_queue;
+}
+
+Queue Device::get_queue(QueueFamily queue_family, uint32_t index) {
+    return Queue(get_raw_queue(raw_device, queue_family, index));
+}
+
+TransferQueue Device::get_queue(TransferQueueFamily queue_family, uint32_t index) {
+    return TransferQueue(get_raw_queue(raw_device, queue_family, index));
+}
+
+GeneralQueue Device::get_queue(GeneralQueueFamily queue_family, uint32_t index) {
+    return GeneralQueue(get_raw_queue(raw_device, queue_family, index));
 }

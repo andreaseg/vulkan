@@ -6,6 +6,21 @@
 #include <optional>
 #include <tuple>
 
+class Queue {
+    private:
+    VkQueue raw_queue;
+    public:
+    Queue(VkQueue raw_queue);
+};
+
+class TransferQueue: public Queue {
+    using Queue::Queue;
+};
+
+class GeneralQueue: public Queue {
+    using Queue::Queue;
+};
+
 class Device {
     public:
     struct Extension {
@@ -16,7 +31,7 @@ class Device {
         const static std::string DescriptorUpdateTemplate;
         const static std::string DeviceGroup;
         const static std::string GotMemoryReuirements2;
-        const static std::string ImaegFormatList;
+        const static std::string ImageFormatList;
         const static std::string Maintenance1;
         const static std::string Maintenance2;
         const static std::string Maintenance3;
@@ -60,6 +75,7 @@ class Device {
         VkPhysicalDevice physical_device;
         std::optional<VkPhysicalDeviceFeatures> features;
         std::vector<const char*> enabled_extensions;
+        std::vector<std::string> load_extensions;
         std::vector<std::tuple<QueueFamily, std::vector<float>>> queues;
     };
     public:
@@ -68,6 +84,7 @@ class Device {
         public:
         Builder(VkPhysicalDevice physical_device);
         Builder& add_extension(const std::string& extension);
+        Builder& add_instance_extension(const std::string& extension);
         Builder& add_queue(QueueFamily queue_family, std::vector<float> priorities);
         Builder& enable_features(VkPhysicalDeviceFeatures features);
         Result<Device, VkResult> build();
@@ -75,7 +92,13 @@ class Device {
 
     Device(VkDevice raw_device);
 
+    Queue get_queue(QueueFamily queue_family, uint32_t index);
+    TransferQueue get_queue(TransferQueueFamily queue_family, uint32_t index);
+    GeneralQueue get_queue(GeneralQueueFamily queue_family, uint32_t index);
+
     void destroy();
 };
+
+
 
 #endif // DEVICE_HPP

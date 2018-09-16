@@ -37,12 +37,10 @@ class QueueFamily {
     protected:
     uint32_t index;
     uint32_t count;
-    uint32_t flags;
     public:
     QueueFamily(uint32_t index, uint32_t count);
     uint32_t get_index();
     uint32_t get_count();
-    uint32_t get_flags();
 
     class Builder {
         private:

@@ -39,10 +39,6 @@ uint32_t QueueFamily::get_count() {
     return count;
 }
 
-uint32_t QueueFamily::get_flags() {
-    return flags;
-}
-
 QueueFamily::Builder::Builder(PhysicalDevice physical_device) {
     builder_properties.raw_physical_device = physical_device;
 }
@@ -80,10 +76,6 @@ std::tuple<GeneralQueueFamily, TransferQueueFamily> QueueFamily::Builder::build(
     return {GeneralQueueFamily(g_index, properties[g_index].queueCount), TransferQueueFamily(t_index, properties[t_index].queueCount)};
 }
 
-TransferQueueFamily::TransferQueueFamily(uint32_t index, uint32_t count): QueueFamily(index, count) {
-    flags = VkQueueFlagBits::VK_QUEUE_TRANSFER_BIT;
-}
+TransferQueueFamily::TransferQueueFamily(uint32_t index, uint32_t count): QueueFamily(index, count) {}
 
-GeneralQueueFamily::GeneralQueueFamily(uint32_t index, uint32_t count): QueueFamily(index, count) {
-    flags = VkQueueFlagBits::VK_QUEUE_COMPUTE_BIT | VkQueueFlagBits::VK_QUEUE_GRAPHICS_BIT;
-}
+GeneralQueueFamily::GeneralQueueFamily(uint32_t index, uint32_t count): QueueFamily(index, count) {}

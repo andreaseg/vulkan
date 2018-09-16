@@ -67,6 +67,7 @@ class Instance {
 
     void destroy();
 
+    void destroy(VkDebugUtilsMessengerEXT messenger);
     
 };
 

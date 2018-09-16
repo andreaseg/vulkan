@@ -52,7 +52,17 @@ if (name == nullptr) {\
     std::cerr << "Unable to load instance level function: " #name << std::endl;\
 }
 
-void load_instance_level_functions(VkInstance instance) {
+#define VK_INSTANCE_EXTENSION_FUNCTION(name, extension) \
+for (auto& n: extension_names) {\
+    if (std::string(extension) == std::string(n)) {\
+        name = (PFN_##name) vkGetInstanceProcAddr(instance, #name);\
+        if (name == nullptr) {\
+            std::cerr << "Unable to load device level extension function: " #name " from " << std::string(extension) << std::endl;\
+        }\
+    }\
+}
+
+void load_instance_level_functions(VkInstance instance, std::vector<const char*> extension_names) {
     #include "vulkan_functions.inl"
 }
 
@@ -148,6 +158,7 @@ Instance::Builder& Instance::Builder::api_version(uint32_t major, uint32_t minor
 }
 
 Result<Instance, VkResult> Instance::Builder::build() {
+
     load_global_functions();
 
     VkApplicationInfo app_info;
@@ -156,12 +167,17 @@ Result<Instance, VkResult> Instance::Builder::build() {
     app_info.apiVersion = properties.api_version.value_or(VK_MAKE_VERSION(1, 1, 0));
     app_info.applicationVersion = properties.app_version.value_or(VK_MAKE_VERSION(0, 1, 0));
     app_info.engineVersion = properties.engine_version.value_or(VK_MAKE_VERSION(0, 1, 0));
-    app_info.pApplicationName = properties.app_name.value_or("Vulkan application").c_str();
+    if (properties.app_name.has_value()) {
+        app_info.pApplicationName = properties.app_name.value().c_str();
+    } else {
+        app_info.pApplicationName = nullptr;
+    }
     app_info.pEngineName = properties.app_name.value_or("Vulkan engine").c_str();
 
     VkInstanceCreateInfo create_info;
     create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
     create_info.pNext = nullptr;
+    create_info.flags = 0;
     create_info.pApplicationInfo = &app_info;
     create_info.enabledExtensionCount = properties.enabled_extensions.size();
     create_info.ppEnabledExtensionNames = (properties.enabled_extensions.size() > 0) ? &properties.enabled_extensions[0] : nullptr;
@@ -175,7 +191,7 @@ Result<Instance, VkResult> Instance::Builder::build() {
         return Result<Instance, VkResult>(result);
     }
 
-    load_instance_level_functions(raw_instance);
+    load_instance_level_functions(raw_instance, properties.enabled_extensions);
 
     return Result<Instance, VkResult>(Instance(raw_instance));
 }
@@ -192,3 +208,6 @@ void Instance::destroy() {
     VULKAN_LIBRARY = nullptr;
 }
 
+void Instance::destroy(VkDebugUtilsMessengerEXT messenger) {
+    vkDestroyDebugUtilsMessengerEXT(raw_instance, messenger, nullptr);
+}
